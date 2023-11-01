@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"refactoring/internal/app"
 	"refactoring/internal/config"
 )
 

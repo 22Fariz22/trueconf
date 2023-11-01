@@ -9,3 +9,6 @@ logger:
   log_level: 'debug'
   rollbar_env: 'trueconf'
 
+file:
+  file_path: 'user.json'
+

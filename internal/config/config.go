@@ -29,6 +29,12 @@ type (
 	Log struct {
 		Level string `env-required:"true" yaml:"log_level"   env:"LOG_LEVEL"`
 	}
+
+	//File -.
+	File struct{
+		
+		Filepath  string `env-required:"true" yaml:"file_path"   env:"FILE_PATH"`
+	}
 )
 
 // NewConfig returns app config.
