@@ -65,12 +65,8 @@ func (a *app) Run() error {
 		})
 	})
 
-	//	hd := handler.NewHandler(l, a.cfg, a.UC)
-	//
-	//	r.Post("/", hd.someFunc())
-
 	a.httpServer.Handler = r
-	a.httpServer.Addr = ":3333"
+	a.httpServer.Addr = a.cfg.Port
 	err := a.httpServer.ListenAndServe()
 	if err != http.ErrServerClosed {
 		return err

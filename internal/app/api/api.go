@@ -1,13 +1,40 @@
 package api
 
-import "net/http"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/22Fariz22/trueconf/internal/user/entity"
+	"github.com/22Fariz22/trueconf/pkg/logger"
+	"github.com/go-chi/chi"
+)
+
+var l logger.Logger
 
 func SearchUsers(w http.ResponseWriter, r *http.Request) {
-	// 	GET http://localhost:3333/api/v1/users
-	// Accept: application/json
+	data, err := openFile()
+	if err != nil {
+		l.Errorf(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
-	//вытащить данные из файла всех юзеров
-	//передать в response данные из файла
+	res, err := json.Marshal(data.List)
+	if err != nil {
+		l.Errorf(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(res) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	w.Write(res)
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -20,17 +47,44 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	//создать юзера
-	//вытащить имя и емейл из json  
+	//вытащить имя и емейл из json
 	//записать новые данные в файл и увеличить инкремент и также записать номер юзера
+
+	var newUser entity.User
+
+	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
+		l.Errorf("error in Create(): ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Println("newUser: ", newUser)
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	//GET http://localhost:3333/api/v1/users/0
-	//Accept: application/json
+	userNumber := chi.URLParam(r, "id")
 
-	//получить номер  из request
-	//достать из файла юзера по номеру
-	//отдать юзера в response 
+	data, err := openFile()
+	if err != nil {
+		l.Errorf(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	i, ok := data.List[userNumber]
+	if ok && !i.Deleted {
+		res, err := json.Marshal(i)
+		if err != nil {
+			l.Errorf(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(res)
+	}
+	if !ok && !i.Deleted || ok && i.Deleted {
+		w.Write([]byte("Такого юзера нету."))
+	}
+
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +97,15 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	//получить номер из request и имя из json
 	//поменять данные юзера в файле
+
+	var updateUser entity.User
+
+	if err := json.NewDecoder(r.Body).Decode(&updateUser); err != nil {
+		l.Errorf("error in Update(): ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Println("updateUser: ", updateUser.DisplayName)
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -50,4 +113,34 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	//получить номер из request
 	//удалить его из файла(или поменять флажок deleted на True)
+
+	deleteNumber := chi.URLParam(r, "id")
+
+	data, err := openFile()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	i, ok := data.List[deleteNumber]
+	if ok && i.Deleted == false {
+		i.Deleted = true
+	}
+}
+
+func openFile() (*entity.UserStore, error) {
+	file, err := os.ReadFile("users.json")
+	if err != nil {
+		l.Errorf("err readfile: ", err)
+		return nil, err
+	}
+
+	data := entity.UserStore{}
+
+	err = json.Unmarshal([]byte(file), &data)
+	if err != nil {
+		l.Errorf("err unmarshall: ", err)
+		return nil, err
+	}
+
+	return &data, nil
 }
