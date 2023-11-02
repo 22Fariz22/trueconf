@@ -3,19 +3,22 @@ package filejson
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"io"
+	"log"
 	"os"
-	"refactoring/internal/config"
-	"refactoring/internal/user/entity"
+
+	"github.com/22Fariz22/trueconf/internal/config"
+	"github.com/22Fariz22/trueconf/internal/user/entity"
 )
 
-//inFileRepository структура для стоража инфайл
+// inFileRepository структура для стоража инфайл
 type inFileRepository struct {
-	file          io.ReadWriteCloser
-	reader        *bufio.Reader
+	file   io.ReadWriteCloser
+	reader *bufio.Reader
 }
 
-//Consumer структура консьюмера
+// Consumer структура консьюмера
 type Consumer struct {
 	File   *os.File
 	reader *bufio.Reader
@@ -43,8 +46,8 @@ func New(cfg *config.Config) usecase.Repository {
 	}
 
 	return &inFileRepository{
-		file:          consumer.File,
-		reader:        consumer.reader,
+		file:   consumer.File,
+		reader: consumer.reader,
 	}
 }
 
@@ -61,15 +64,15 @@ func (f *inFileRepository) Init() error {
 		}
 		f.memoryStorage.Insert()
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		log.Println(err)
 	}
 	return nil
 }
 
-func(f *inFileRepository)CreateUser(ctx context.Context){}
-func(f *inFileRepository)DeleteUser(ctx context.Context){}
-func(f *inFileRepository)GetUser(ctx context.Context){}
-func(f *inFileRepository)UpdateUser(ctx context.Context){}
-func(f *inFileRepository)SearchUser(ctx context.Context){}
+func (f *inFileRepository) CreateUser(ctx context.Context) {}
+func (f *inFileRepository) DeleteUser(ctx context.Context) {}
+func (f *inFileRepository) GetUser(ctx context.Context)    {}
+func (f *inFileRepository) UpdateUser(ctx context.Context) {}
+func (f *inFileRepository) SearchUser(ctx context.Context) {}

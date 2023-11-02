@@ -2,15 +2,20 @@ package app
 
 import (
 	"net/http"
-	"refactoring/internal/config"
-	"refactoring/internal/user"
-	filejson "refactoring/internal/user/repo/file-json"
-	"refactoring/pkg/logger"
+	"time"
+
+	"github.com/22Fariz22/trueconf/internal/app/api"
+	"github.com/22Fariz22/trueconf/internal/config"
+	"github.com/22Fariz22/trueconf/internal/user"
+	"github.com/22Fariz22/trueconf/pkg/logger"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
+type App interface {
+	Run() error
+}
 
 type app struct {
 	cfg        *config.Config
@@ -19,36 +24,56 @@ type app struct {
 }
 
 // NewApp create
-func NewApp(cfg *config.Config) *app {
-
-	// Repository
-		var repo user.RepositoryUser
-
-		repo = filejson.NewInFileRepository(cfg)
-
+func NewApp(cfg *config.Config) App {
+	// var repo user.RepositoryUser
 
 	return &app{
 		cfg:        cfg,
-		httpServer: nil,
-		UC:         usecase.NewUseCase(repo),
+		httpServer: &http.Server{},
+		//		UC:         usecase.NewUseCase(repo),
 	}
 }
 
-func (a *app) Run() {
+func (a *app) Run() error {
 	l := logger.New(a.cfg.Log.Level)
-	l.Info("app start")
-
-	
+	l.Infof("app start")
 
 	r := chi.NewRouter()
+
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
 
-	hd := handler.NewHandler(l,a.cfg, a.UC)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(time.Now().String()))
+	})
 
-	r.Post("/", hd.someFunc())
+	r.Route("/api", func(r chi.Router) {
+		r.Route("/v1", func(r chi.Router) {
+			r.Route("/users", func(r chi.Router) {
+				r.Get("/", api.SearchUsers)
+				r.Post("/", api.CreateUser)
 
-	http.ListenAndServe(a.cfg.Port, r)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", api.GetUser)
+					r.Patch("/", api.UpdateUser)
+					r.Delete("/", api.DeleteUser)
+				})
+			})
+		})
+	})
+
+	//	hd := handler.NewHandler(l, a.cfg, a.UC)
+	//
+	//	r.Post("/", hd.someFunc())
+
+	a.httpServer.Handler = r
+	a.httpServer.Addr = ":3333"
+	err := a.httpServer.ListenAndServe()
+	if err != http.ErrServerClosed {
+		return err
+	}
+	return nil
 }

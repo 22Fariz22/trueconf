@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	"refactoring/internal/app"
-	"refactoring/internal/config"
+
+	"github.com/22Fariz22/trueconf/internal/app"
+	"github.com/22Fariz22/trueconf/internal/config"
 )
 
 func main() {

@@ -10,23 +10,22 @@ import (
 )
 
 // Interface -.
-type Interface interface {
-	Debug(message interface{}, args ...interface{})
-	Info(message string, args ...interface{})
-	Warn(message string, args ...interface{})
-	Error(message interface{}, args ...interface{})
-	Fatal(message interface{}, args ...interface{})
+type Logger interface {
+	Debugf(format interface{}, args ...interface{})
+	Infof(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
+	Errorf(format interface{}, args ...interface{})
+	Fatalf(format interface{}, args ...interface{})
 }
 
-// Logger -.
-type Logger struct {
+type logger struct {
 	logger *zerolog.Logger
 }
 
-var _ Interface = (*Logger)(nil)
+var _ Logger = (*logger)(nil)
 
 // New -.
-func New(level string) *Logger {
+func New(level string) Logger {
 	var l zerolog.Level
 
 	switch strings.ToLower(level) {
@@ -46,59 +45,59 @@ func New(level string) *Logger {
 
 	skipFrameCount := 3
 	//logger := zerolog.New(os.Stdout).With().Timestamp().CallerWithSkipFrameCount(zerolog.CallerSkipFrameCount + skipFrameCount).Logger()
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).With().Timestamp().CallerWithSkipFrameCount(zerolog.CallerSkipFrameCount + skipFrameCount).Logger()
+	lg := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).With().Timestamp().CallerWithSkipFrameCount(zerolog.CallerSkipFrameCount + skipFrameCount).Logger()
 
-	return &Logger{
-		logger: &logger,
+	return &logger{
+		logger: &lg,
 	}
 }
 
 // Debug -.
-func (l *Logger) Debug(message interface{}, args ...interface{}) {
-	l.msg("debug", message, args...)
+func (l *logger) Debugf(format interface{}, args ...interface{}) {
+	l.msg("debug", format, args...)
 }
 
 // Info -.
-func (l *Logger) Info(message string, args ...interface{}) {
-	l.log(message, args...)
+func (l *logger) Infof(format string, args ...interface{}) {
+	l.log(format, args...)
 }
 
 // Warn -.
-func (l *Logger) Warn(message string, args ...interface{}) {
-	l.log(message, args...)
+func (l *logger) Warnf(format string, args ...interface{}) {
+	l.log(format, args...)
 }
 
 // Error -.
-func (l *Logger) Error(message interface{}, args ...interface{}) {
+func (l *logger) Errorf(format interface{}, args ...interface{}) {
 	if l.logger.GetLevel() == zerolog.DebugLevel {
-		l.Debug(message, args...)
+		l.Debugf(format, args...)
 	}
 
-	l.msg("error", message, args...)
+	l.msg("error", format, args...)
 }
 
 // Fatal -.
-func (l *Logger) Fatal(message interface{}, args ...interface{}) {
-	l.msg("fatal", message, args...)
+func (l *logger) Fatalf(format interface{}, args ...interface{}) {
+	l.msg("fatal", format, args...)
 
 	os.Exit(1)
 }
 
-func (l *Logger) log(message string, args ...interface{}) {
+func (l *logger) log(format string, args ...interface{}) {
 	if len(args) == 0 {
-		l.logger.Info().Msg(message)
+		l.logger.Info().Msg(format)
 	} else {
-		l.logger.Info().Msgf(message, args...)
+		l.logger.Info().Msgf(format, args...)
 	}
 }
 
-func (l *Logger) msg(level string, message interface{}, args ...interface{}) {
-	switch msg := message.(type) {
+func (l *logger) msg(level string, format interface{}, args ...interface{}) {
+	switch msg := format.(type) {
 	case error:
 		l.log(msg.Error(), args...)
 	case string:
 		l.log(msg, args...)
 	default:
-		l.log(fmt.Sprintf("%s message %v has unknown type %v", level, message, msg), args...)
+		l.log(fmt.Sprintf("%s format %v has unknown type %v", level, format, msg), args...)
 	}
 }
