@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -49,7 +48,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("newUser: ", newUser)
 
 	data, err := openFile()
 	if err != nil {
@@ -64,20 +62,20 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	data.List[incrStr] = newUser
 
 	//маршалим data
-		res, err := json.Marshal(data)
-		if err != nil {
-			l.Errorf(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	res, err := json.Marshal(data)
+	if err != nil {
+		l.Errorf(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-		//записываем в файл
-		err = os.WriteFile("users.json", res, 0666)
-		if err != nil {
-			l.Errorf(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	//записываем в файл
+	err = os.WriteFile("users.json", res, 0666)
+	if err != nil {
+		l.Errorf(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 }
 
@@ -191,7 +189,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 func openFile() (*entity.UserStore, error) {
 	file, err := os.ReadFile("users.json")
 	if err != nil {
-		l.Errorf("err readfile: ", err)
+		l.Errorf(err)
 		return nil, err
 	}
 
