@@ -7,6 +7,8 @@ import (
 	"github.com/22Fariz22/trueconf/internal/app/api"
 	"github.com/22Fariz22/trueconf/internal/config"
 	"github.com/22Fariz22/trueconf/internal/user"
+	filejson "github.com/22Fariz22/trueconf/internal/user/repo/file-json"
+	"github.com/22Fariz22/trueconf/internal/user/usecase"
 	"github.com/22Fariz22/trueconf/pkg/logger"
 
 	"github.com/go-chi/chi"
@@ -17,6 +19,8 @@ type App interface {
 	Run() error
 }
 
+var lg logger.Logger
+
 type app struct {
 	cfg        *config.Config
 	httpServer *http.Server
@@ -25,14 +29,13 @@ type app struct {
 
 // NewApp create
 func NewApp(cfg *config.Config) App {
-	fileName := "user.json"
-
-	repo := user.NewRepo(fileName)
+	fileName := "users.json"
+	repo := filejson.NewRepo(fileName)
 
 	return &app{
 		cfg:        cfg,
 		httpServer: &http.Server{},
-		UC:         user.NewUseCase(repo),
+		UC:         usecase.NewUseCaseUser(repo),
 	}
 }
 

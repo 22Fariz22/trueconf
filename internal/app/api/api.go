@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/22Fariz22/trueconf/internal/user"
 	"github.com/22Fariz22/trueconf/internal/user/entity"
@@ -25,13 +25,6 @@ func NewHandler(uc user.UseCase) handler {
 }
 
 func (h *handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
-	// data, err := openFile()
-	// if err != nil {
-	// 	l.Errorf(err)
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
-
 	ctx := context.Background()
 	data, err := h.uc.SearchUsers(ctx)
 	if err != nil {
@@ -59,54 +52,45 @@ func (h *handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser entity.User
+	ctx := context.Background()
 
-	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
+	var newU entity.User
+
+	if err := json.NewDecoder(r.Body).Decode(&newU); err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	data, err := openFile()
-	if err != nil {
-		l.Errorf(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	data.Increment++
-	newUser.CreatedAt = time.Now()
-	incrStr := strconv.Itoa(data.Increment)
-
-	data.List[incrStr] = newUser
-
-	//маршалим data
-	res, err := json.Marshal(data)
+	err := h.uc.CreateUser(ctx, newU)
 	if err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	//записываем в файл
-	err = os.WriteFile("users.json", res, 0666)
-	if err != nil {
-		l.Errorf(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	w.Write([]byte("user created"))
 }
 
 func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
-	userNumber := chi.URLParam(r, "id")
-
-	data, err := openFile()
+	ctx := context.Background()
+	id := chi.URLParam(r, "id")
+	idStr, err := strconv.Atoi(id)
 	if err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	i, ok := data.List[userNumber]
+	data, err := h.uc.GetUser(ctx, idStr)
+	if err != nil {
+		l.Errorf(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("data in handker GETUSER():", data)
+	i, ok := data.List[id]
 	if ok && !i.Deleted {
 		res, err := json.Marshal(i)
 		if err != nil {
