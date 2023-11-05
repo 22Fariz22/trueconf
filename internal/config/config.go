@@ -31,9 +31,8 @@ type (
 	}
 
 	//File -.
-	File struct{
-		
-		Filepath  string `env-required:"true" yaml:"file_path"   env:"FILE_PATH"`
+	File struct {
+		Filepath string `env-required:"true" yaml:"file_path"   env:"FILE_PATH"`
 	}
 )
 

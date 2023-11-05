@@ -1,12 +1,14 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/22Fariz22/trueconf/internal/user"
 	"github.com/22Fariz22/trueconf/internal/user/entity"
 	"github.com/22Fariz22/trueconf/pkg/logger"
 	"github.com/go-chi/chi"
@@ -14,8 +16,24 @@ import (
 
 var l logger.Logger
 
-func SearchUsers(w http.ResponseWriter, r *http.Request) {
-	data, err := openFile()
+type handler struct {
+	uc user.UseCase
+}
+
+func NewHandler(uc user.UseCase) handler {
+	return handler{uc: uc}
+}
+
+func (h *handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
+	// data, err := openFile()
+	// if err != nil {
+	// 	l.Errorf(err)
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
+
+	ctx := context.Background()
+	data, err := h.uc.SearchUsers(ctx)
 	if err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -40,7 +58,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser entity.User
 
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
@@ -76,10 +94,9 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	userNumber := chi.URLParam(r, "id")
 
 	data, err := openFile()
@@ -107,7 +124,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userNumber := chi.URLParam(r, "id")
 
 	var updateUser entity.User
@@ -150,7 +167,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (h *handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	deleteNumber := chi.URLParam(r, "id")
 
 	data, err := openFile()

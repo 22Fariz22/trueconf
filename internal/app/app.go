@@ -20,23 +20,27 @@ type App interface {
 type app struct {
 	cfg        *config.Config
 	httpServer *http.Server
-	UC         user.UseCaseUser
+	UC         user.UseCase
 }
 
 // NewApp create
 func NewApp(cfg *config.Config) App {
-	// var repo user.RepositoryUser
+	fileName := "user.json"
+
+	repo := user.NewRepo(fileName)
 
 	return &app{
 		cfg:        cfg,
 		httpServer: &http.Server{},
-		//		UC:         usecase.NewUseCase(repo),
+		UC:         user.NewUseCase(repo),
 	}
 }
 
 func (a *app) Run() error {
 	l := logger.New(a.cfg.Log.Level)
 	l.Infof("app start")
+
+	h := api.NewHandler(a.UC)
 
 	r := chi.NewRouter()
 
@@ -53,13 +57,13 @@ func (a *app) Run() error {
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/users", func(r chi.Router) {
-				r.Get("/", api.SearchUsers)
-				r.Post("/", api.CreateUser)
+				r.Get("/", h.SearchUsers)
+				r.Post("/", h.CreateUser)
 
 				r.Route("/{id}", func(r chi.Router) {
-					r.Get("/", api.GetUser)
-					r.Patch("/", api.UpdateUser)
-					r.Delete("/", api.DeleteUser)
+					r.Get("/", h.GetUser)
+					r.Patch("/", h.UpdateUser)
+					r.Delete("/", h.DeleteUser)
 				})
 			})
 		})
