@@ -6,6 +6,7 @@ import (
 	"github.com/22Fariz22/trueconf/internal/user/entity"
 )
 
+//UseCase итрерфейс service слоя
 type UseCase interface {
 	CreateUser(ctx context.Context, newU entity.User) error
 	DeleteUser(ctx context.Context, id string) error

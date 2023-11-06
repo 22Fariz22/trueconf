@@ -3,7 +3,6 @@ package filejson
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -99,7 +98,6 @@ func (f *inFileRepo) DeleteUser(ctx context.Context, id string) error {
 }
 
 func (f *inFileRepo) GetUser(ctx context.Context, id string) (*entity.UserStore, error) {
-	fmt.Println("Repo GetUser()")
 	data := entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)

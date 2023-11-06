@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/22Fariz22/trueconf/internal/user"
@@ -40,8 +39,7 @@ func (u *UseCase) DeleteUser(ctx context.Context, id string) error {
 }
 
 func (u *UseCase) GetUser(ctx context.Context, id string) (*entity.UserStore, error) {
-	fmt.Println("UC GetUser().")
-	data, err := u.GetUser(ctx, id)
+	data, err := u.repo.GetUser(ctx, id)
 	if err != nil {
 		l.Errorf(err)
 		return &entity.UserStore{}, err

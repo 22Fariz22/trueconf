@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/22Fariz22/trueconf/internal/user"
@@ -22,9 +21,10 @@ func NewHandler(uc user.UseCase) handler {
 	return handler{uc: uc}
 }
 
+//SearchUsers вывод всех пользователей
 func (h *handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	
+
 	data, err := h.uc.SearchUsers(ctx)
 	if err != nil {
 		l.Errorf(err)
@@ -50,7 +50,7 @@ func (h *handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-
+//GetUser получить данные пользователья по id
 func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
@@ -62,7 +62,6 @@ func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("data in handker GETUSER():", data)
 	i, ok := data.List[id]
 	if ok && !i.Deleted {
 		res, err := json.Marshal(i)
@@ -78,10 +77,11 @@ func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !ok && !i.Deleted || ok && i.Deleted {
-		w.Write([]byte("Такого юзера нету."))
+		w.Write([]byte("Такого пользователя нету."))
 	}
 }
 
+//CreateUser создать нового пользователя
 func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
@@ -126,6 +126,7 @@ func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+//DeleteUser удалить пользователя по id
 func (h *handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
