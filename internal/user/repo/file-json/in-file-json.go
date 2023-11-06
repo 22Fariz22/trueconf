@@ -56,11 +56,48 @@ func (f *inFileRepo) CreateUser(ctx context.Context, newU entity.User) error {
 	return nil
 }
 
-func (f *inFileRepo) DeleteUser(ctx context.Context) {
+func (f *inFileRepo) DeleteUser(ctx context.Context, id string) error {
+	data := entity.UserStore{}
 
+	file, err := os.ReadFile(f.fileName)
+	if err != nil {
+		l.Errorf(err)
+		return err
+	}
+
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		l.Errorf(err)
+		return err
+	}
+
+	//проверка на наличие такого юзера
+	i, ok := data.List[id]
+	if ok && !i.Deleted {
+		//копируем сущность User и меняем значение
+		delUser := data.List[id]
+		delUser.Deleted = true
+		data.List[id] = delUser
+
+		//маршалим data
+		res, err := json.Marshal(data)
+		if err != nil {
+			l.Errorf(err)
+			return err
+		}
+
+		//записываем в файл
+		err = os.WriteFile("users.json", res, 0666)
+		if err != nil {
+			l.Errorf(err)
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (f *inFileRepo) GetUser(ctx context.Context, id int) (*entity.UserStore, error) {
+func (f *inFileRepo) GetUser(ctx context.Context, id string) (*entity.UserStore, error) {
 	data := entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)
@@ -78,7 +115,46 @@ func (f *inFileRepo) GetUser(ctx context.Context, id int) (*entity.UserStore, er
 	return &data, nil
 }
 
-func (f *inFileRepo) UpdateUser(ctx context.Context) {}
+func (f *inFileRepo) UpdateUser(ctx context.Context, id string, updateUser entity.User) error {
+	data := entity.UserStore{}
+
+	file, err := os.ReadFile(f.fileName)
+	if err != nil {
+		l.Errorf(err)
+		return err
+	}
+
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		l.Errorf(err)
+		return err
+	}
+
+	//проверка на наличие такого юзера
+	i, ok := data.List[id]
+	if ok && !i.Deleted {
+		//копируем сущность User и меняем значение
+		updUser := data.List[id]
+		updUser.DisplayName = updateUser.DisplayName
+		data.List[id] = updUser
+
+		//маршалим data
+		res, err := json.Marshal(data)
+		if err != nil {
+			l.Errorf(err)
+			return err
+		}
+
+		//записываем в файл
+		err = os.WriteFile("users.json", res, 0666)
+		if err != nil {
+			l.Errorf(err)
+			return err
+		}
+	}
+
+	return nil
+}
 
 func (f *inFileRepo) SearchUsers(ctx context.Context) (*entity.UserStore, error) {
 	data := entity.UserStore{}

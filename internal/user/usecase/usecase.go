@@ -30,9 +30,15 @@ func (u *UseCase) CreateUser(ctx context.Context, newU entity.User) error {
 	return nil
 }
 
-func (u *UseCase) DeleteUser(ctx context.Context) {}
+func (u *UseCase) DeleteUser(ctx context.Context, id string) error {
+	err := u.repo.DeleteUser(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-func (u *UseCase) GetUser(ctx context.Context, id int) (*entity.UserStore, error) {
+func (u *UseCase) GetUser(ctx context.Context, id string) (*entity.UserStore, error) {
 	data, err := u.GetUser(ctx, id)
 	if err != nil {
 		l.Errorf(err)
@@ -42,7 +48,15 @@ func (u *UseCase) GetUser(ctx context.Context, id int) (*entity.UserStore, error
 	return data, nil
 }
 
-func (u *UseCase) UpdateUser(ctx context.Context) {}
+func (u *UseCase) UpdateUser(ctx context.Context, id string, updUser entity.User) error {
+	err := u.repo.UpdateUser(ctx, id, updUser)
+	if err != nil {
+		l.Errorf(err)
+		return err
+	}
+
+	return nil
+}
 
 func (u *UseCase) SearchUsers(ctx context.Context) (*entity.UserStore, error) {
 	data, err := u.repo.SearchUsers(ctx)

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/22Fariz22/trueconf/internal/user"
 	"github.com/22Fariz22/trueconf/internal/user/entity"
@@ -69,20 +68,15 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("user created"))
 }
 
 func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
-	idStr, err := strconv.Atoi(id)
-	if err != nil {
-		l.Errorf(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 
-	data, err := h.uc.GetUser(ctx, idStr)
+	data, err := h.uc.GetUser(ctx, id)
 	if err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -106,9 +100,12 @@ func (h *handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	if !ok && !i.Deleted || ok && i.Deleted {
 		w.Write([]byte("Такого юзера нету."))
 	}
+	
 }
 
 func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
 	userNumber := chi.URLParam(r, "id")
 
 	var updateUser entity.User
@@ -118,73 +115,28 @@ func (h *handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := openFile()
+	err := h.uc.UpdateUser(ctx, userNumber, updateUser)
 	if err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	//проверка на наличие такого юзера
-	i, ok := data.List[userNumber]
-	if ok && !i.Deleted {
-		//копируем сущность User и меняем значение
-		updUser := data.List[userNumber]
-		updUser.DisplayName = updateUser.DisplayName
-		data.List[userNumber] = updUser
-
-		//маршалим data
-		res, err := json.Marshal(data)
-		if err != nil {
-			l.Errorf(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		//записываем в файл
-		err = os.WriteFile("users.json", res, 0666)
-		if err != nil {
-			l.Errorf(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	deleteNumber := chi.URLParam(r, "id")
+	ctx := context.Background()
+	id := chi.URLParam(r, "id")
 
-	data, err := openFile()
+	err := h.uc.DeleteUser(ctx, id)
 	if err != nil {
 		l.Errorf(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	//проверка на наличие такого юзера
-	i, ok := data.List[deleteNumber]
-	if ok && !i.Deleted {
-		//копируем сущность User и меняем значение
-		delUser := data.List[deleteNumber]
-		delUser.Deleted = true
-		data.List[deleteNumber] = delUser
-
-		//маршалим data
-		res, err := json.Marshal(data)
-		if err != nil {
-			l.Errorf(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		//записываем в файл
-		err = os.WriteFile("users.json", res, 0666)
-		if err != nil {
-			l.Errorf(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func openFile() (*entity.UserStore, error) {
