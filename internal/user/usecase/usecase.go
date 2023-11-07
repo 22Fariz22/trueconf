@@ -9,59 +9,60 @@ import (
 	"github.com/22Fariz22/trueconf/pkg/logger"
 )
 
-var l logger.Logger
-
 type UseCase struct {
-	repo user.Repo
+	Repository user.Repository
 }
 
-func NewUseCaseUser(repo user.Repo) *UseCase {
-	return &UseCase{repo: repo}
+func NewUseCaseUser(repository user.Repository) *UseCase {
+	return &UseCase{Repository: repository}
 }
 
-func (u *UseCase) CreateUser(ctx context.Context, newU entity.User) error {
+func (u *UseCase) CreateUser(ctx context.Context, l logger.Logger, newU *entity.User) error {
 	newU.CreatedAt = time.Now()
 
-	err := u.repo.CreateUser(ctx, newU)
+	err := u.Repository.CreateUser(ctx, l, newU)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in usecase CreateUser()->u.repository.CreateUser() with newU.DispalyName:%s", err, newU.DisplayName)
 		return err
 	}
+
 	return nil
 }
 
-func (u *UseCase) DeleteUser(ctx context.Context, id string) error {
-	err := u.repo.DeleteUser(ctx, id)
+func (u *UseCase) DeleteUser(ctx context.Context, l logger.Logger, id string) error {
+	err := u.Repository.DeleteUser(ctx, l, id)
 	if err != nil {
+		l.Errorf("err %w in usecase DeleteUser()->u.repository.DeleteUser() with id:%s", err, id)
 		return err
 	}
+
 	return nil
 }
 
-func (u *UseCase) GetUser(ctx context.Context, id string) (*entity.UserStore, error) {
-	data, err := u.repo.GetUser(ctx, id)
+func (u *UseCase) GetUser(ctx context.Context, l logger.Logger, id string) (*entity.UserStore, error) {
+	data, err := u.Repository.GetUser(ctx, l, id)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in usecase GetUser()->u.repository.GetUser() with id:%s", err, id)
 		return &entity.UserStore{}, err
 	}
 
 	return data, nil
 }
 
-func (u *UseCase) UpdateUser(ctx context.Context, id string, updUser entity.User) error {
-	err := u.repo.UpdateUser(ctx, id, updUser)
+func (u *UseCase) UpdateUser(ctx context.Context, l logger.Logger, id string, updUser *entity.User) error {
+	err := u.Repository.UpdateUser(ctx, l, id, updUser)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in usecase UpdateUser()->u.repository.UpdateUser() with id:%s", err, id)
 		return err
 	}
 
 	return nil
 }
 
-func (u *UseCase) SearchUsers(ctx context.Context) (*entity.UserStore, error) {
-	data, err := u.repo.SearchUsers(ctx)
+func (u *UseCase) SearchUsers(ctx context.Context, l logger.Logger) (*entity.UserStore, error) {
+	data, err := u.Repository.SearchUsers(ctx, l)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err in usecase SearchUsers()->u.repository.SearchUsers()", err)
 		return nil, err
 	}
 

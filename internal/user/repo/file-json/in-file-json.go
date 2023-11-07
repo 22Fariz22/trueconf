@@ -10,64 +10,62 @@ import (
 	"github.com/22Fariz22/trueconf/pkg/logger"
 )
 
-var l logger.Logger
-
 // inFileRepo структура для стоража инфайл
-type inFileRepo struct {
+type inFileRepository struct {
 	fileName string
 }
 
-func NewRepo(fileName string) *inFileRepo {
-	return &inFileRepo{fileName: fileName}
+func NewRepo(fileName string) *inFileRepository {
+	return &inFileRepository{fileName: fileName}
 }
 
-func (f *inFileRepo) CreateUser(ctx context.Context, newU entity.User) error {
-	data := entity.UserStore{}
+func (f *inFileRepository) CreateUser(ctx context.Context, l logger.Logger, newU *entity.User) error {
+	data := &entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository CreateUser()->os.ReadFile()", err)
 		return err
 	}
 
 	err = json.Unmarshal(file, &data)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository CreateUser()->json.Unmarshal()", err)
 		return err
 	}
 
 	data.Increment++
 	incrStr := strconv.Itoa(data.Increment)
-	data.List[incrStr] = newU
+	data.List[incrStr] = *newU
 
 	res, err := json.Marshal(data)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository CreateUser()->json.Marshal() with increment: %v", err, data.Increment)
 		return err
 	}
 
 	//записываем в файл
 	err = os.WriteFile("users.json", res, 0666)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository CreateUser()->os.WriteFile()", err)
 		return err
 	}
 
 	return nil
 }
 
-func (f *inFileRepo) DeleteUser(ctx context.Context, id string) error {
+func (f *inFileRepository) DeleteUser(ctx context.Context, l logger.Logger, id string) error {
 	data := entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository DeleteUser()->os.ReadFile()", err)
 		return err
 	}
 
 	err = json.Unmarshal(file, &data)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository DeleteUser()->json.Unmarshal()", err)
 		return err
 	}
 
@@ -82,14 +80,14 @@ func (f *inFileRepo) DeleteUser(ctx context.Context, id string) error {
 		//маршалим data
 		res, err := json.Marshal(data)
 		if err != nil {
-			l.Errorf(err)
+			l.Errorf("err %w in repository DeleteUser()->json.Marshal()", err)
 			return err
 		}
 
 		//записываем в файл
 		err = os.WriteFile("users.json", res, 0666)
 		if err != nil {
-			l.Errorf(err)
+			l.Errorf("err %w in repository DeleteUser()->os.WriteFile()", err)
 			return err
 		}
 	}
@@ -97,36 +95,36 @@ func (f *inFileRepo) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (f *inFileRepo) GetUser(ctx context.Context, id string) (*entity.UserStore, error) {
-	data := entity.UserStore{}
+func (f *inFileRepository) GetUser(ctx context.Context, l logger.Logger, id string) (*entity.UserStore, error) {
+	data := &entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository GetUser()->os.ReadFile()", err)
 		return nil, err
 	}
 
 	err = json.Unmarshal(file, &data)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository GetUser()->json.Unmarshal()", err)
 		return nil, err
 	}
 
-	return &data, nil
+	return data, nil
 }
 
-func (f *inFileRepo) UpdateUser(ctx context.Context, id string, updateUser entity.User) error {
-	data := entity.UserStore{}
+func (f *inFileRepository) UpdateUser(ctx context.Context, l logger.Logger, id string, updateUser *entity.User) error {
+	data := &entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository UpdateUser()->os.ReadFile()", err)
 		return err
 	}
 
 	err = json.Unmarshal(file, &data)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository UpdateUser()->json.Unmarshal()", err)
 		return err
 	}
 
@@ -141,14 +139,14 @@ func (f *inFileRepo) UpdateUser(ctx context.Context, id string, updateUser entit
 		//маршалим data
 		res, err := json.Marshal(data)
 		if err != nil {
-			l.Errorf(err)
+			l.Errorf("err %w in repository UpdateUser()->json.Marshal()", err)
 			return err
 		}
 
 		//записываем в файл
 		err = os.WriteFile("users.json", res, 0666)
 		if err != nil {
-			l.Errorf(err)
+			l.Errorf("err %w in repository UpdateUser()->os.WriteFile()", err)
 			return err
 		}
 	}
@@ -156,20 +154,20 @@ func (f *inFileRepo) UpdateUser(ctx context.Context, id string, updateUser entit
 	return nil
 }
 
-func (f *inFileRepo) SearchUsers(ctx context.Context) (*entity.UserStore, error) {
-	data := entity.UserStore{}
+func (f *inFileRepository) SearchUsers(ctx context.Context, l logger.Logger) (*entity.UserStore, error) {
+	data := &entity.UserStore{}
 
 	file, err := os.ReadFile(f.fileName)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository SearchUsers()->os.ReadFile()", err)
 		return nil, err
 	}
 
 	err = json.Unmarshal(file, &data)
 	if err != nil {
-		l.Errorf(err)
+		l.Errorf("err %w in repository SearchUsers()->json.Unmarshal()", err)
 		return nil, err
 	}
 
-	return &data, nil
+	return data, nil
 }

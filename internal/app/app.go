@@ -19,8 +19,6 @@ type App interface {
 	Run() error
 }
 
-var lg logger.Logger
-
 type app struct {
 	cfg        *config.Config
 	httpServer *http.Server
@@ -30,12 +28,12 @@ type app struct {
 // NewApp create
 func NewApp(cfg *config.Config) App {
 	fileName := "users.json"
-	repo := filejson.NewRepo(fileName)
+	repository := filejson.NewRepo(fileName)
 
 	return &app{
 		cfg:        cfg,
 		httpServer: &http.Server{},
-		UC:         usecase.NewUseCaseUser(repo),
+		UC:         usecase.NewUseCaseUser(repository),
 	}
 }
 
@@ -43,7 +41,7 @@ func (a *app) Run() error {
 	l := logger.New(a.cfg.Log.Level)
 	l.Infof("app start")
 
-	h := api.NewHandler(a.UC)
+	h := api.NewHandler(l, a.UC)
 
 	r := chi.NewRouter()
 
@@ -76,6 +74,7 @@ func (a *app) Run() error {
 	a.httpServer.Addr = a.cfg.Port
 	err := a.httpServer.ListenAndServe()
 	if err != http.ErrServerClosed {
+		l.Errorf("error in http.ErrServerClosed: ", err)
 		return err
 	}
 	return nil
